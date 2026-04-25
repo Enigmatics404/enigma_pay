@@ -1,0 +1,10 @@
+{
+  "name": "EnigmaPay",
+  "description": "Futuristic Web3 payroll and multi-send salary system for DAOs and organizations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "Web3 Wallet Integration",
+    "Payroll Automation",
+    "Multi-chain Support"
+  ]
+}

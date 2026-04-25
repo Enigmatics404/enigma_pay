@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-primary: #8B5CF6;
+  --color-primary-dark: #6D28D9;
+  --color-accent: #10B981;
+  
+  --radius-3xl: 24px;
+  --radius-4xl: 32px;
+}
+
+:root {
+  --color-bg-main: #FFFFFF;
+  --color-bg-surface: #F8F8FA;
+  --color-bg-card: #FFFFFF;
+  --color-border: rgba(0, 0, 0, 0.05);
+  --color-text-main: #09090B;
+  --color-text-dim: #71717A;
+  --color-text-accent: #8B5CF6;
+  --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+}
+
+.dark {
+  --color-bg-main: #09090B;
+  --color-bg-surface: #121214;
+  --color-bg-card: rgba(24, 24, 27, 0.4);
+  --color-border: rgba(255, 255, 255, 0.05);
+  --color-text-main: #FFFFFF;
+  --color-text-dim: #A1A1AA;
+  --color-text-accent: #A78BFA;
+  --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  --glass-bg: rgba(9, 9, 11, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
+}
+
+@layer base {
+  body {
+    @apply antialiased selection:bg-primary/30;
+    color: var(--color-text-main);
+    background-color: var(--color-bg-main);
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+    color: var(--color-text-main);
+  }
+}
+
+@utility accent-gradient {
+  background: linear-gradient(135deg, #8B5CF6 0%, #D946EF 100%);
+}
+
+@layer components {
+  .glow-purple {
+    box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.15);
+  }
+
+  .btn-glow {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+
+  .btn-glow::after {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none bg-white/10;
+  }
+
+  .btn-glow:hover::after {
+    @apply opacity-100;
+  }
+
+  .btn-glow:active {
+    @apply scale-95;
+  }
+
+  .noise-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.015;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-premium);
+  }
+
+  .technical-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .technical-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .technical-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-full transition-colors;
+    background-color: var(--color-border);
+  }
+
+  .technical-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-text-dim);
+  }
+}
+
+.mesh-grid {
+  background-image: 
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.text-accent {
+  @apply accent-gradient bg-clip-text text-transparent;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #D946EF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.bg-radial-gradient {
+  background: radial-gradient(circle at center, var(--tw-gradient-from), var(--tw-gradient-to));
+}
+
+/* Transitions for dark mode */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
