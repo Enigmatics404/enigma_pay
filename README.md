@@ -287,8 +287,8 @@ The application uses a layered context architecture:
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
-   cd enigma-pay
+   git clone https://github.com/Enigmatics404/enigma_pay.git
+   cd enigma_pay
    ```
 
 2. **Install dependencies:**
@@ -462,8 +462,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Documentation**: [Link to docs]
 - **Discord**: [Join our community]
-- **Twitter**: [@EnigmaPay]
-- **Email**: support@enigmapay.io
+- **Twitter**: https://x.com/EnigmaticAura_
+- **Email**: adiicrypto6666@gmail.com
 
 ---
 
