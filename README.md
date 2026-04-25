@@ -462,7 +462,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Documentation**: [Link to docs]
 - **Discord**: [Join our community]
-- **Twitter**: https://x.com/EnigmaticAura_
+- **Twitter**: [https://x.com/EnigmaticAura_](https://x.com/EnigmaticAura_)
 - **Email**: adiicrypto6666@gmail.com
 
 ---
