@@ -29,6 +29,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const warningShownRef = useRef(false);
 
   /**
+   * Handle user logout (defined early to avoid hoisting issues)
+   */
+  const handleLogout = useCallback((reason?: string) => {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    setSessionExpiry(null);
+    setUser(null);
+    setIsAuthenticated(false);
+    warningShownRef.current = false;
+
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+
+    if (reason) {
+      toast.info(reason, { duration: 3000 });
+    } else {
+      toast.success('Logged out successfully');
+    }
+  }, []);
+
+  /**
    * Reset idle timer on user activity
    */
   const resetIdleTimer = useCallback(() => {
@@ -41,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         handleLogout('Session expired due to inactivity');
       }, SESSION_TIMEOUT_MS);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, handleLogout]);
 
   /**
    * Check session expiry and show warning
@@ -51,8 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const now = new Date();
     const timeUntilExpiry = sessionExpiry.getTime() - now.getTime();
-    const timeUntilWarning = SESSION_TIMEOUT_MS - WARNING_BEFORE_EXPIRY_MS;
 
+    // Show warning if session is about to expire
     if (timeUntilExpiry <= WARNING_BEFORE_EXPIRY_MS && !warningShownRef.current) {
       warningShownRef.current = true;
       toast.warning('Session expiring soon', {
@@ -64,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (timeUntilExpiry <= 0) {
       handleLogout('Session expired');
     }
-  }, [sessionExpiry, isAuthenticated]);
+  }, [sessionExpiry, isAuthenticated, handleLogout]);
 
   /**
    * Handle user login
@@ -107,28 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, [resetIdleTimer]);
-
-  /**
-   * Handle user logout
-   */
-  const handleLogout = useCallback((reason?: string) => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    setSessionExpiry(null);
-    setUser(null);
-    setIsAuthenticated(false);
-    warningShownRef.current = false;
-
-    if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = null;
-    }
-
-    if (reason) {
-      toast.info(reason, { duration: 3000 });
-    } else {
-      toast.success('Logged out successfully');
-    }
-  }, []);
 
   /**
    * Restore session from storage on mount

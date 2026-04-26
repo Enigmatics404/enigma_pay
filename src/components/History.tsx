@@ -30,6 +30,17 @@ import { Table } from './ui/Table';
 type SortKey = 'date' | 'totalAmount' | 'recipientsCount' | 'batchId';
 type SortOrder = 'asc' | 'desc';
 
+/**
+ * Escape special characters for CSV export to handle commas, quotes, and newlines
+ */
+const escapeCSV = (value: string | number): string => {
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
 export default function History() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -86,28 +97,33 @@ export default function History() {
   }, [searchQuery, statusFilter, sortConfig]);
 
   const exportToCSV = () => {
-    const headers = ['Batch ID', 'Date', 'Network', 'Recipients', 'Amount', 'Status', 'TX Hash'];
-    const rows = filteredAndSortedHistory.map(item => [
-      item.batchId,
-      item.date,
-      item.network,
-      item.recipientsCount,
-      item.totalAmount,
-      item.status,
-      item.txHash
-    ]);
+    try {
+      const headers = ['Batch ID', 'Date', 'Network', 'Recipients', 'Amount', 'Status', 'TX Hash'];
+      const rows = filteredAndSortedHistory.map(item => [
+        escapeCSV(item.batchId),
+        escapeCSV(item.date),
+        escapeCSV(item.network),
+        item.recipientsCount,
+        item.totalAmount,
+        escapeCSV(item.status),
+        escapeCSV(item.txHash)
+      ]);
 
-    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `payroll_audit_log_${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('CSV Export Initiated');
+      const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `payroll_audit_log_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('CSV Export Initiated');
+    } catch (error) {
+      console.error('CSV export failed:', error);
+      toast.error('Failed to export CSV', { description: 'Please try again' });
+    }
   };
 
   return (
