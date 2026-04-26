@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider, useTheme } from './components/ThemeProvider';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
@@ -8,27 +9,63 @@ import BatchPay from './components/BatchPay';
 import History from './components/History';
 import Settings from './components/Settings';
 import Automation from './components/Automation';
-import LandingPage from './components/LandingPage';
-import Login from './components/Login';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from './lib/utils';
-import { Menu, X } from 'lucide-react';
 import { Toaster } from 'sonner';
-
 import BottomNav from './components/BottomNav';
-
 import { Web3Provider, useWeb3 } from './components/Web3Provider';
 import { AutomationProvider } from './components/AutomationProvider';
 import { NotificationProvider } from './components/NotificationProvider';
 import { UserProvider } from './components/UserProvider';
 import { ApprovalProvider } from './components/ApprovalProvider';
 import { OrgProvider } from './components/OrgProvider';
-import { AlertTriangle, Info } from 'lucide-react';
-import { toast } from 'sonner';
+import { AlertTriangle } from 'lucide-react';
+import ErrorBoundary from './components/ErrorBoundary';
+import { AuthProvider, useAuth } from './components/AuthProvider';
+import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
+import { Spinner } from './components/ui/Spinner';
 
+// Lazy load heavy components for code splitting
+const LazyLandingPage = lazy(() => import('./components/LandingPage'));
+const LazyLogin = lazy(() => import('./components/Login'));
+
+/**
+ * Wrapper component for LandingPage to handle lazy loading with required props
+ */
+function LandingPageRoute() {
+  const navigate = useNavigate();
+  
+  const handleLaunch = () => navigate('/login');
+  const handleSandbox = () => navigate('/login');
+  
+  return <LazyLandingPage onLaunch={handleLaunch} onTrySandbox={handleSandbox} />;
+}
+
+/**
+ * Wrapper component for Login to handle lazy loading with required props
+ */
+function LoginRoute() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  
+  const handleSuccess = async () => {
+    // Auth is handled by AuthProvider, just redirect after successful login
+    navigate('/dashboard', { replace: true });
+  };
+  
+  const handleSandboxToggle = (enabled: boolean) => {
+    // Sandbox toggle logic can be extended here
+  };
+  
+  return <LazyLogin onSuccess={handleSuccess} onSandboxToggle={handleSandboxToggle} />;
+}
+
+/**
+ * Network warning banner for testnet environments
+ */
 function NetworkBanner() {
   const { currentChain } = useWeb3();
-
+  
   if (!currentChain.isTestnet) return null;
 
   return (
@@ -49,45 +86,32 @@ function NetworkBanner() {
   );
 }
 
-function AppContent() {
-  const [view, setView] = useState<'landing' | 'login' | 'app'>('landing');
-  const [activeTab, setActiveTab] = useState('dashboard');
+/**
+ * Loading fallback for lazy-loaded components
+ */
+function PageLoader() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <Spinner size="lg" />
+        <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Main application shell with navigation
+ */
+function AppShell() {
   const { theme } = useTheme();
-
-  const handleLaunchApp = () => setView('login');
-  
-  const handleTrySandbox = () => {
-    setView('login');
-  };
-
-  const handleLoginSuccess = () => {
-    setView('app');
-  };
-
-  const handleSandboxToggle = (enabled: boolean) => {
-    // We already show toasts inside the component, but we can do extra setup here if needed
-  };
-
-  if (view === 'landing') {
-    return (
-      <div className={theme === 'dark' ? "dark" : ""}>
-        <LandingPage onLaunch={handleLaunchApp} onTrySandbox={handleTrySandbox} />
-      </div>
-    );
-  }
-
-  if (view === 'login') {
-    return (
-      <div className={theme === 'dark' ? "dark" : ""}>
-        <Login onSuccess={handleLoginSuccess} onSandboxToggle={handleSandboxToggle} />
-      </div>
-    );
-  }
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const { logout } = useAuth();
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard onNavigate={setActiveTab} onLogout={() => setView('landing')} />;
+        return <Dashboard onNavigate={setActiveTab} onLogout={logout} />;
       case 'employees':
         return <Employees />;
       case 'payroll':
@@ -99,7 +123,7 @@ function AppContent() {
       case 'settings':
         return <Settings />;
       default:
-        return <Dashboard onNavigate={setActiveTab} onLogout={() => setView('landing')} />;
+        return <Dashboard onNavigate={setActiveTab} onLogout={logout} />;
     }
   };
 
@@ -120,10 +144,10 @@ function AppContent() {
         className: 'glass-card border-white/10 text-white dark:text-white',
       }} />
       
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} onLogout={() => setView('landing')} />
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} onLogout={logout} />
       
       <div className="flex-1 flex flex-col md:ml-64 relative min-w-0">
-        <TopBar onLogout={() => setView('landing')} />
+        <TopBar onLogout={logout} />
         
         <main className="flex-1 pt-28 md:pt-32 px-4 md:px-10 pb-40 md:pb-20 max-w-7xl mx-auto w-full">
           <NetworkBanner />
@@ -146,23 +170,82 @@ function AppContent() {
   );
 }
 
+/**
+ * Main application component with routing and authentication
+ */
 export default function App() {
   return (
-    <ThemeProvider>
-      <Web3Provider>
-        <NotificationProvider>
-          <UserProvider>
-            <OrgProvider>
-              <AutomationProvider>
-                <ApprovalProvider>
-                  <AppContent />
-                </ApprovalProvider>
-              </AutomationProvider>
-            </OrgProvider>
-          </UserProvider>
-        </NotificationProvider>
-      </Web3Provider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <Router>
+        <ThemeProvider>
+          <Web3Provider>
+            <NotificationProvider>
+              <UserProvider>
+                <OrgProvider>
+                  <AutomationProvider>
+                    <ApprovalProvider>
+                      <AuthProvider>
+                        <Routes>
+                          {/* Public Routes */}
+                          <Route path="/" element={
+                            <PublicRoute>
+                              <Suspense fallback={<PageLoader />}>
+                                <LandingPageRoute />
+                              </Suspense>
+                            </PublicRoute>
+                          } />
+                          <Route path="/login" element={
+                            <PublicRoute>
+                              <Suspense fallback={<PageLoader />}>
+                                <LoginRoute />
+                              </Suspense>
+                            </PublicRoute>
+                          } />
+                          
+                          {/* Protected Routes */}
+                          <Route path="/dashboard" element={
+                            <ProtectedRoute>
+                              <AppShell />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/employees" element={
+                            <ProtectedRoute>
+                              <AppShell />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/payroll" element={
+                            <ProtectedRoute>
+                              <AppShell />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/automation" element={
+                            <ProtectedRoute>
+                              <AppShell />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/transactions" element={
+                            <ProtectedRoute>
+                              <AppShell />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/settings" element={
+                            <ProtectedRoute>
+                              <AppShell />
+                            </ProtectedRoute>
+                          } />
+                          
+                          {/* Catch all - redirect to dashboard */}
+                          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                        </Routes>
+                      </AuthProvider>
+                    </ApprovalProvider>
+                  </AutomationProvider>
+                </OrgProvider>
+              </UserProvider>
+            </NotificationProvider>
+          </Web3Provider>
+        </ThemeProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
-
