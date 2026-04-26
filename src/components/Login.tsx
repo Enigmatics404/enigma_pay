@@ -7,6 +7,7 @@ import { useTheme } from './ThemeProvider';
 import { NETWORKS } from '../constants';
 import { useWeb3 } from './Web3Provider';
 import { toast } from 'sonner';
+import { useAuth } from './AuthProvider';
 
 type AuthStep = 'initial' | 'connecting' | 'success';
 
@@ -17,7 +18,8 @@ interface LoginProps {
 
 export default function Login({ onSuccess, onSandboxToggle }: LoginProps) {
   const { theme, toggleTheme } = useTheme();
-  const { currentChain, setCurrentChain } = useWeb3();
+  const { currentChain, setCurrentChain, connect: connectWallet } = useWeb3();
+  const { login } = useAuth();
   const [step, setStep] = useState<AuthStep>('initial');
   const [sandboxMode, setSandboxMode] = useState(true);
   const [showNetworkSelect, setShowNetworkSelect] = useState(false);
@@ -33,18 +35,35 @@ export default function Login({ onSuccess, onSandboxToggle }: LoginProps) {
     }
   }, [sandboxMode, currentChain.isTestnet, setCurrentChain, testnetChains]);
 
-  const handleConnect = useCallback(() => {
+  const handleConnect = useCallback(async () => {
     setStep('connecting');
-    setTimeout(() => {
+    
+    try {
+      // Generate mock wallet address for demonstration
+      const mockWalletAddress = '0x' + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+      
+      // Connect wallet in Web3Provider
+      connectWallet(mockWalletAddress);
+      
+      // Call the actual login function from AuthProvider
+      await login({ walletAddress: mockWalletAddress });
+      
       setStep('success');
       toast.success('Wallet connected. Verification successful.', {
         icon: <ShieldCheck className="text-green-500" size={16} />
       });
+      
+      // Wait briefly to show success state before redirecting
       setTimeout(() => {
         onSuccess();
-      }, 1500);
-    }, 2000);
-  }, [onSuccess]);
+      }, 1000);
+    } catch (error) {
+      setStep('initial');
+      toast.error('Connection failed', {
+        description: 'Please try again or connect a different wallet.'
+      });
+    }
+  }, [onSuccess, login, connectWallet]);
 
   const handleToggleSandbox = useCallback(() => {
     const newVal = !sandboxMode;

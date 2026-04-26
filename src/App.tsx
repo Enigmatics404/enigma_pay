@@ -46,10 +46,10 @@ function LandingPageRoute() {
  */
 function LoginRoute() {
   const navigate = useNavigate();
-  const { login } = useAuth();
   
-  const handleSuccess = async () => {
-    // Auth is handled by AuthProvider, just redirect after successful login
+  const handleSuccess = () => {
+    // Navigate to dashboard after successful login
+    // Auth state is already set by AuthProvider.login()
     navigate('/dashboard', { replace: true });
   };
   
