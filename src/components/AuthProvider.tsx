@@ -162,7 +162,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     restoreSession();
-  }, [resetIdleTimer]);
+    // Only run once on mount - empty dependency array prevents race conditions
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Set up idle detection and session expiry checks
