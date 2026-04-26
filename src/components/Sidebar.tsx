@@ -24,13 +24,14 @@ interface SidebarProps {
 export default function Sidebar({ activeTab, onTabChange, onLogout }: SidebarProps) {
   const { theme } = useTheme();
 
+  // Standardized navigation labels to match BottomNav
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-    { id: 'employees', label: 'Recipients', icon: Users },
-    { id: 'payroll', label: 'Distributions', icon: Zap },
-    { id: 'automation', label: 'Autonomous', icon: Clock },
-    { id: 'transactions', label: 'Audit Log', icon: History },
-    { id: 'settings', label: 'Organization', icon: CreditCard },
+    { id: 'employees', label: 'Nodes', icon: Users },
+    { id: 'payroll', label: 'Dispatch', icon: Zap },
+    { id: 'automation', label: 'Auto', icon: Clock },
+    { id: 'transactions', label: 'Audit', icon: History },
+    { id: 'settings', label: 'System', icon: CreditCard },
   ];
 
   return (

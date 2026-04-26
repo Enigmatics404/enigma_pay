@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { AutomationConfig } from '../types';
 import { toast } from 'sonner';
 import { useNotifications } from './NotificationProvider';
@@ -22,8 +22,20 @@ export function AutomationProvider({ children }: { children: React.ReactNode }) 
     dayOfMonth: 1,
     dayOfWeek: 1,
   });
+  
+  // Use ref to track pending timeouts for cleanup
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const toggleAutomation = () => {
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const toggleAutomation = useCallback(() => {
     setConfig(prev => {
       const newState = !prev.isEnabled;
       if (newState) {
@@ -33,22 +45,18 @@ export function AutomationProvider({ children }: { children: React.ReactNode }) 
       }
       return { ...prev, isEnabled: newState };
     });
-  };
+  }, []);
 
-  const setFrequency = (frequency: 'weekly' | 'monthly') => {
+  const setFrequency = useCallback((frequency: 'weekly' | 'monthly') => {
     setConfig(prev => ({ ...prev, frequency }));
     toast.success(`Frequency set to ${frequency}`);
-  };
+  }, []);
 
-  const setRunDay = (day: number) => {
-    if (config.frequency === 'weekly') {
-      setConfig(prev => ({ ...prev, dayOfWeek: day }));
-    } else {
-      setConfig(prev => ({ ...prev, dayOfMonth: day }));
-    }
-  };
+  const setRunDay = useCallback((day: number) => {
+    setConfig(prev => ({ ...prev, [prev.frequency === 'weekly' ? 'dayOfWeek' : 'dayOfMonth']: day }));
+  }, []);
 
-  const simulateTrigger = () => {
+  const simulateTrigger = useCallback(() => {
     if (!config.isEnabled) {
       toast.error('Automation is disabled');
       return;
@@ -59,7 +67,9 @@ export function AutomationProvider({ children }: { children: React.ReactNode }) 
       title: 'Automation Sequence Multi-sig',
       message: 'Self-executing smart contract call initiated for next payroll epoch.'
     });
-    setTimeout(() => {
+    
+    // Store timeout reference for cleanup
+    timeoutRef.current = setTimeout(() => {
       toast.success('Payroll batch processed autonomously');
       addNotification({
         type: 'success',
@@ -69,10 +79,10 @@ export function AutomationProvider({ children }: { children: React.ReactNode }) 
       setConfig(prev => ({
         ...prev,
         lastRun: new Date().toISOString(),
-        nextRun: new Date(Date.now() + (config.frequency === 'weekly' ? 86400000 * 7 : 86400000 * 30)).toISOString()
+        nextRun: new Date(Date.now() + (prev.frequency === 'weekly' ? 86400000 * 7 : 86400000 * 30)).toISOString()
       }));
     }, 2000);
-  };
+  }, [config.isEnabled, addNotification]);
 
   return (
     <AutomationContext.Provider value={{ config, setFrequency, toggleAutomation, setRunDay, simulateTrigger }}>
