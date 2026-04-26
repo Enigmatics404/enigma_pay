@@ -62,34 +62,41 @@ export function ApprovalProvider({ children }: { children: React.ReactNode }) {
        return;
     }
 
-    setApprovals(prev => prev.map(run => {
-      if (run.id === id && run.approvalInfo) {
-        if (run.approvalInfo.approvedBy.includes(currentUser.id)) {
-          toast.error('Node has already signed this sequence');
-          return run;
-        }
+    // Find the run first to avoid calling toast inside map
+    const run = approvals.find(r => r.id === id);
+    if (!run?.approvalInfo) {
+      toast.error('Approval request not found');
+      return;
+    }
 
-        const newApprovedBy = [...run.approvalInfo.approvedBy, currentUser.id];
-        const isFullyApproved = newApprovedBy.length >= run.approvalInfo.required;
+    if (run.approvalInfo.approvedBy.includes(currentUser.id)) {
+      toast.error('Node has already signed this sequence');
+      return;
+    }
+
+    setApprovals(prev => prev.map(r => {
+      if (r.id === id && r.approvalInfo) {
+        const newApprovedBy = [...r.approvalInfo.approvedBy, currentUser.id];
+        const isFullyApproved = newApprovedBy.length >= r.approvalInfo.required;
 
         toast.success(isFullyApproved ? 'Threshold reached! Sequence unlocked.' : 'Signature recorded on registry');
         
         addNotification({
           type: 'success',
           title: 'Signature Recorded',
-          message: `Node ${currentUser.name} has authorized sequence ${run.batchId}.`
+          message: `Node ${currentUser.name} has authorized sequence ${r.batchId}.`
         });
 
         return {
-          ...run,
+          ...r,
           approvalInfo: {
-            ...run.approvalInfo,
+            ...r.approvalInfo,
             approvedBy: newApprovedBy,
             status: isFullyApproved ? 'approved' : 'partially_approved'
           }
         };
       }
-      return run;
+      return r;
     }));
   };
 

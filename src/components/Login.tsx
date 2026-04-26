@@ -23,16 +23,15 @@ export default function Login({ onSuccess, onSandboxToggle }: LoginProps) {
   const [showNetworkSelect, setShowNetworkSelect] = useState(false);
   const [isHoveringGoogle, setIsHoveringGoogle] = useState(false);
 
-  // Filter networks to testnets only when in sandbox mode
-  const testnetChains = NETWORKS.filter(n => n.isTestnet);
+  // Memoize filtered networks to avoid recalculation on every render
+  const testnetChains = React.useMemo(() => NETWORKS.filter(n => n.isTestnet), []);
   
-  // Fix: Remove currentChain and testnetChains from dependency array to prevent infinite loop
+  // Handle sandbox mode network switching
   useEffect(() => {
     if (sandboxMode && !currentChain.isTestnet) {
       setCurrentChain(testnetChains[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sandboxMode]);
+  }, [sandboxMode, currentChain.isTestnet, setCurrentChain, testnetChains]);
 
   const handleConnect = useCallback(() => {
     setStep('connecting');
@@ -55,7 +54,7 @@ export default function Login({ onSuccess, onSandboxToggle }: LoginProps) {
     else toast.warning('Warning: Operating in live mainnet environments.');
   }, [sandboxMode, onSandboxToggle]);
 
-  const testnetsOnly = NETWORKS.filter(n => n.isTestnet);
+  // testnetsOnly is now memoized as testnetChains (line 27), removing duplicate
 
   return (
     <div className={cn(

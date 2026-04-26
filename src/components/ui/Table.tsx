@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 
 interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
-  headers: string[];
+  headers: (string | React.ReactNode)[];
   children?: React.ReactNode;
   className?: string;
   [key: string]: any;

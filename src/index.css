@@ -41,9 +41,14 @@
 }
 
 
-/* Ensure minimum font size for accessibility */
+/* Ensure minimum font size for accessibility (WCAG compliance) */
 .text-\[7px\], .text-\[8px\], .text-\[9px\] {
-  font-size: clamp(0.625rem, 2vw, 0.75rem);
+  font-size: clamp(0.75rem, 2vw, 0.875rem); /* Minimum 12px for accessibility */
+}
+
+/* Safe area inset for iOS devices with home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Prevent horizontal overflow */
