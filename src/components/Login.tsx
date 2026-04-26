@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, Fingerprint, Mail, Wallet, RefreshCw, X, CheckCircle2, ChevronRight, Layout } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -26,15 +26,15 @@ export default function Login({ onSuccess, onSandboxToggle }: LoginProps) {
   // Filter networks to testnets only when in sandbox mode
   const testnetChains = NETWORKS.filter(n => n.isTestnet);
   
+  // Fix: Remove currentChain and testnetChains from dependency array to prevent infinite loop
   useEffect(() => {
     if (sandboxMode && !currentChain.isTestnet) {
       setCurrentChain(testnetChains[0]);
     }
-  }, [sandboxMode, currentChain, setCurrentChain, testnetChains]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sandboxMode]);
 
-  const testnetsOnly = typeof testnetChains !== 'undefined' ? testnetChains : [];
-
-  const handleConnect = () => {
+  const handleConnect = useCallback(() => {
     setStep('connecting');
     setTimeout(() => {
       setStep('success');
@@ -45,15 +45,17 @@ export default function Login({ onSuccess, onSandboxToggle }: LoginProps) {
         onSuccess();
       }, 1500);
     }, 2000);
-  };
+  }, [onSuccess]);
 
-  const handleToggleSandbox = () => {
+  const handleToggleSandbox = useCallback(() => {
     const newVal = !sandboxMode;
     setSandboxMode(newVal);
     onSandboxToggle(newVal);
     if (newVal) toast.info('Sandbox mode initialized. Operating in local registry.');
     else toast.warning('Warning: Operating in live mainnet environments.');
-  };
+  }, [sandboxMode, onSandboxToggle]);
+
+  const testnetsOnly = NETWORKS.filter(n => n.isTestnet);
 
   return (
     <div className={cn(

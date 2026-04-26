@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, Settings, Sun, Moon, Wallet, ChevronDown, LogOut, User, Shield, Activity, Globe, Zap, Network, Check, X, Info, AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Search, Bell, Settings, Sun, Moon, Wallet, ChevronDown, LogOut, User, Shield, Activity, Globe, Zap, Check, X, Info, AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 import { useWeb3 } from './Web3Provider';
 import { useNotifications } from './NotificationProvider';
